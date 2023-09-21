@@ -179,6 +179,7 @@ export default {
   },
   data () {
     return {
+      raw_info: [],
       donotsearch: false,
       isrecommend: false,
       formItem: {
@@ -275,9 +276,7 @@ export default {
       })
     },
     submit () {
-      if (this.formItem.selectedSearch != null) {
-        this.$emit('changeisrecommend')
-      }
+      this.$emit('passselected', this.formItem.selectedSearch)
       this.$refs.form.validate((valid) => {
         if (!valid) return
         this.submitting = true// 发送数据之前禁止做任何修改
@@ -300,6 +299,9 @@ export default {
           console.log('what happened')
         })
       })
+      if (this.formItem.selectedSearch != null) {
+        this.$emit('changeisrecommend')
+      }
     },
     finishConversation () {
       // this.$emit('getRecommendInfo')

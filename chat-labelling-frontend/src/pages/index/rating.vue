@@ -5,16 +5,15 @@
       请评估系统推荐的产品是否符合您的需求（是否相关）
     </p>
     <h1  v-if="role === 'sys'" style="text-align:center">请评价这次对话</h1>
-<!--    <button @click="getRecommendInfo">refresh</button>-->
     <Divider />
     <!-- 显示搜索结果的部分 -->
-<!--    <Button type="primary" @click="fetchSearchedMessage">显示</Button>-->
-<!--    <div v-if="searchedMessage">-->
-<!--      <h3>Search Result:</h3>-->
-<!--      <p>{{ searchedMessage }}</p>-->
-<!--    </div>-->
-    <div v-for="(item, index) in recommend_info" :key="index">
-      <h3>{{ item.name }}</h3>
+    <!--    <Button type="primary" @click="fetchSearchedMessage">显示</Button>-->
+    <!--    <div v-if="searchedMessage">-->
+    <!--      <h3>Search Result:</h3>-->
+    <!--      <p>{{ searchedMessage }}</p>-->
+    <!--    </div>-->
+    <div v-for="(item, index) in recommend_info" :key="index" v-if="role === 'cus'">
+      <h3>{{ item}}</h3>
       <RadioGroup v-model="selectedOptions[index]">
         <Radio :label="1">相关</Radio>
         <Radio :label="0">不相关</Radio>
@@ -35,13 +34,13 @@
     </div>
     <!--    <button @click="saveResults">Save Results</button>-->
     <Form :model="formItem" ref="form" label-position="top" :rules="rules" :show-message="false">
-<!--      <FormItem prop="goalAchieve" v-if="role==='cus'">-->
-<!--        <h3 slot="label">Did you achieve your goal?</h3>-->
-<!--        <RadioGroup v-model="formItem.goalAchieve">-->
-<!--          <Radio label=1>related</Radio>-->
-<!--          <Radio label=0>Unrelated</Radio>-->
-<!--        </RadioGroup>-->
-<!--      </FormItem>-->
+      <!--      <FormItem prop="goalAchieve" v-if="role==='cus'">-->
+      <!--        <h3 slot="label">Did you achieve your goal?</h3>-->
+      <!--        <RadioGroup v-model="formItem.goalAchieve">-->
+      <!--          <Radio label=1>related</Radio>-->
+      <!--          <Radio label=0>Unrelated</Radio>-->
+      <!--        </RadioGroup>-->
+      <!--      </FormItem>-->
       <FormItem prop="goalUnderstand" v-if="role==='sys'">
         <h3 slot="label">您认为您理解了用户的目标产品意图吗？</h3>
         <RadioGroup v-model="formItem.goalUnderstand">
@@ -49,13 +48,13 @@
           <Radio label=0>否</Radio>
         </RadioGroup>
       </FormItem>
-<!--      <FormItem prop="conversationSearch" v-if="role==='cus'">-->
-<!--        <h3 slot="label">Would you like to conduct search through conversations in this way?</h3>-->
-<!--        <RadioGroup v-model="formItem.conversationSearch">-->
-<!--          <Radio label=1>related</Radio>-->
-<!--          <Radio label=0>Unrelated</Radio>-->
-<!--        </RadioGroup>-->
-<!--      </FormItem>-->
+      <!--      <FormItem prop="conversationSearch" v-if="role==='cus'">-->
+      <!--        <h3 slot="label">Would you like to conduct search through conversations in this way?</h3>-->
+      <!--        <RadioGroup v-model="formItem.conversationSearch">-->
+      <!--          <Radio label=1>related</Radio>-->
+      <!--          <Radio label=0>Unrelated</Radio>-->
+      <!--        </RadioGroup>-->
+      <!--      </FormItem>-->
       <FormItem prop="easierWay" v-if="role==='sys'">
         <h3 slot="label">哪个选项更容易让用户实现他/她的目标？</h3>
         <RadioGroup v-model="formItem.easierWay">
@@ -81,31 +80,10 @@
   </div>
 </template>
 <script>
-import md5 from 'crypto-js/md5'
-
 export default {
-  props: ['role', 'conversationId', 'userId', 'finished', 'needProfile', 'isrecommend'],
-  mounted () {
-    this.interval1 = setInterval(() => {
-      console.log('1')
-      console.log(this.finished)
-      console.log(this.needProfile)
-      console.log(this.needProfile)
-      console.log(this.isrecommend)
-      console.log(this.recommend_info)
-      console.log(this.recommend_info)
-      console.log(this.recommend_info === [])
-      if (this.isrecommend === true && this.recommend_info.length === 0) {
-        this.getRecommendInfo()
-        console.log('2')
-      }
-      console.log('dskafjskahfksdfhksdfhk')
-    }, 1000)
-  },
+  props: ['role', 'conversationId', 'userId', 'recommend_info'],
   data () {
     return {
-      timer2: 0,
-      recommend_info: [],
       extractedTextList: [],
       cus_rate: {
         anotheranswer: null,
@@ -136,54 +114,6 @@ export default {
     }
   },
   methods: {
-    startTimer2 () {
-      // 当 partner 不为空时，执行定时器相关的代码
-
-    },
-    stopTimer () {
-      // 停止定时器
-      clearInterval(this.timer)
-    },
-    beforeDestroy () {
-      // 在组件销毁前停止定时器，以防止内存泄漏
-      this.stopTimer()
-    },
-    async getRecommendInfo () {
-      try {
-        // 调用后端API来获取搜索结果消息
-        const response = await this.$http.get('/api/getSearchedMessage', {
-          params: {
-            conversationId: this.conversationId
-          }
-        })
-        if (response.data !== null) {
-          this.searchedMessage = response.data // 将搜索结果赋值给数据对象
-          const regex = /href="[^"]*qid=(\d+&sr=\d+-\d+)/g // 提取qid和后续内容的正则表达式
-          const matches = [...this.searchedMessage.matchAll(regex)] // 匹配所有链接中的qid和后续内容
-          const productNames = this.searchedMessage ? this.searchedMessage.match(/>([^<]+)(?=<\/a>)/g).map(item => item.slice(1)) : [] // 提取产品名称
-          // console.log(matches)
-          console.log(productNames)
-          if (productNames.length === 0) {
-            this.recommend_info = []
-            return
-          }
-          const recommendInfoMap = {} // 辅助对象用于去重
-          this.recommend_info = matches.map((match, index) => {
-            const name = productNames[index] // 获取产品名称
-            // print(name)
-            const id = md5(name).toString() // 提取qid
-            if (!recommendInfoMap[name]) {
-              recommendInfoMap[name] = true
-              return { id, name }
-            }
-            return null // 已经添加过的id，返回null
-          }).filter(item => item !== null)
-        }
-        // console.log(this.recommend_info)
-      } catch (error) {
-        console.error('Error fetching searched message:', error)
-      }
-    },
     restart () {
       // console.log(this.recommend_info.length)
       if (this.selectedOptions.length === this.recommend_info.length && this.cus_rate.anotheranswer != null) {

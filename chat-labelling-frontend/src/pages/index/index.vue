@@ -70,13 +70,14 @@
               @changeBackupForParent="saveChangeBackup"
               @getRecommendInfo="getRecommendInfo"
               @changeisrecommend="changeisrecommend"
+              @passselected="passselected"
               :bus="bus"
             />
           </Col>
         </Row>
       </div>
     </Card>
-    <rating v-show="finished&&!needProfile" :finished="finish" :need-profile="needProfile" :isrecommend="isrecommend" :role="role" :userId="username" :conversationId="conversationId"  @completed="ratingCompleted"/>
+    <rating v-show="finished&&!needProfile" :recommend_info="recommend_info" :finished="finish" :need-profile="needProfile" :isrecommend="isrecommend" :role="role" :userId="username" :conversationId="conversationId"  @completed="ratingCompleted"/>
   </div>
 </template>
 <script>
@@ -110,6 +111,8 @@ export default {
   },
   data () {
     return {
+      raw_info: [],
+      add_info: [],
       dialogVisible: false,
       touuid: '', // 你的用户数据
       torole: '',
@@ -146,10 +149,37 @@ export default {
   methods: {
     changeisrecommend () {
       this.isrecommend = true
+      // this.getRecommendInfo()
+      console.log(this.recommend_info)
     },
     openPopup () {
       this.$refs.popup.openPopup()
       // this.do()
+    },
+    passselected (selected) {
+      // this.raw_info = selected
+      console.log('ffffffffffffffffffffffffffffffffffffff')
+      console.log(selected)
+      this.raw_info = selected.map(item => item.title)
+      // for (let i = 0; i < selected.length; i++) {
+      //   console.log('item')
+      //   console.log(selected[i])
+      //   console.log(selected[i].title)
+      //   if (!this.add_row.includes(selected[i].title)) {
+      //     // 如果不在，将其添加到 this.add_row 中
+      //     this.add_row.push(selected[i].title)
+      //   }
+      // }
+      for (let i = 0; i < this.raw_info.length; i++) {
+        if (!this.add_info.includes(this.raw_info[i])) {
+          this.add_info.push(this.raw_info[i])
+        }
+      }
+      console.log('raw')
+      console.log(this.raw_info)
+      console.log('add')
+      console.log(this.add_info)
+      this.recommend_info = this.add_info
     },
     async do () {
       // 在这里执行你的操作
@@ -365,9 +395,35 @@ export default {
           this.loading = true
         }
         if (data.messageCommand === 'SENDMESSAGE' && !this.finished) {
+          console.log('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhh')
+          console.log(data)
+          console.log('hhhhhhhhhhhhhhhhhhhhhhhhhhhhhh')
+          console.log(dataList)
+          if (this.role === 'cus') {
+            this.raw_info = data.content.split('iuiuiuiuiuiui')
+            data.content = this.raw_info[0]
+            console.log(this.raw_info)
+            let tmp = this.raw_info[1].toString()
+            this.raw_info = tmp.split('|*&*|')
+            this.raw_info.pop()
+            console.log(this.raw_info)
+            for (let i = 0; i < this.raw_info.length; i++) {
+              let tmp2 = this.raw_info[i].split('imidimid')
+              let tmp3 = {name: tmp2[0], id: tmp2[1]}
+              if (!this.add_info.some(item => item.name === tmp3.name && item.id === tmp3.id)) {
+                this.add_info.push(tmp3)
+              }
+            }
+            console.log('raw')
+            console.log(this.raw_info)
+            console.log('add')
+            console.log(this.add_info)
+            this.recommend_info = this.add_info
+          }
           if (data.content) {
             this.$refs.chatUI.addMessage({message: data.content, time: new Date()}, 'sys')
           }
+          console.log(this.recommend_info)
           if (this.role === 'sys') {
             this.loading = true
             this.disabled = true
@@ -432,10 +488,13 @@ export default {
       })
     },
     websocketsend (data) {
+      console.log('saddddddddddddddddddddddddddddd')
+      console.log(data)
       this.$socket.send(JSON.stringify({
         from: this.username,
         to: this.partner,
         type: this.role === 'sys' ? 'SYS2CUS' : 'CUS2SYS',
+        product: 'wow',
         ...data
       }))
     },
@@ -635,11 +694,24 @@ export default {
           msg += '<br>' // Add an empty line between results
         }
       }
+      let msg2 = msg
+      if (this.role === 'sys') {
+        msg += 'iuiuiuiuiuiui'
+        for (let i = 0; i < this.recommend_info.length; i++) {
+          msg += this.recommend_info[i]
+          const id = md5(name).toString()
+          msg += 'imidimid' + id
+          msg += '|*&*|'
+        }
+      }
       data.response = msg
+      if (this.role === 'sys') {
+        msg = msg2
+      }
       console.log('data:')
       console.log(data)
       this.websocketsend(data)
-      this.$refs.chatUI.addMessage({message: msg, time: new Date()}, 'user')
+      this.$refs.chatUI.addMessage({message: msg2, time: new Date()}, 'user')
       callback()
     },
     saveChangeBackup (checked) {
