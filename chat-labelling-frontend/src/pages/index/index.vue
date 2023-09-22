@@ -239,7 +239,7 @@ export default {
         if (this.partner !== '') {
           this.do() // 调用定时触发的函数
         }
-      }, 50000) // 30秒 = 30000毫秒
+      }, 120000) // 30秒 = 30000毫秒
     },
     stopTimer () {
       // 停止定时器
@@ -308,6 +308,22 @@ export default {
       // this.message = 'Loading actions'
       await this.loadAction()
       // this.message = 'Waiting for commands from server'
+      await this.loadRecommend() // 获取推荐信息
+    },
+    loadRecommend () {
+      if (this.role !== 'cus') { // 只有当角色为用户时才查询add_info
+        return
+      }
+      return this.$http.get('/api/loadRecommendInfo', {
+        params: {
+          conversationId: this.conversationId,
+          user: this.username
+        }
+      }).then((response) => {
+        this.add_info = response.data
+        this.recommend_info = this.add_info
+        console.log(this.recommend_info)
+      })
     },
     profileCompleted () {
       this.needProfile = false
@@ -387,6 +403,7 @@ export default {
           this.message = '正在读取'
           await this.loadHistoryAndBackground()
           this.loading = false
+          await this.loadRecommend() // 获取推荐信息
         }
         if (data.messageCommand === 'WAIT4PARTNER' && !this.finished) {
           this.message = '正在匹配'
@@ -419,6 +436,16 @@ export default {
             console.log('add')
             console.log(this.add_info)
             this.recommend_info = this.add_info
+            this.$http.post('/api/saveRecommend', {
+              recommend_info: this.recommend_info,
+              username: this.username,
+              conversationId: this.conversationId
+            }).then((response) => {
+              // this.$emit('completed')
+            }).catch((e) => {
+              this.submitting = false
+              this.$Message.error('产品保存数据库失败！')
+            })
           }
           if (data.content) {
             this.$refs.chatUI.addMessage({message: data.content, time: new Date()}, 'sys')

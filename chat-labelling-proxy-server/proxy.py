@@ -40,7 +40,7 @@ async def login(name, password, role, action):
         host="localhost",
         port=3306,
         user="root",
-        password="joker",
+        password="password",
         database='chat_labelling',
         cursorclass=pymysql.cursors.DictCursor
     )

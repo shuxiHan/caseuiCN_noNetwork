@@ -13,7 +13,7 @@
     <!--      <p>{{ searchedMessage }}</p>-->
     <!--    </div>-->
     <div v-for="(item, index) in recommend_info" :key="index" v-if="role === 'cus'">
-      <h3>{{ item}}</h3>
+      <h3>{{ item.name}}</h3>
       <RadioGroup v-model="selectedOptions[index]">
         <Radio :label="1">相关</Radio>
         <Radio :label="0">不相关</Radio>
