@@ -197,7 +197,7 @@ export default {
       }
       this.touser = response.data.name
       // eslint-disable-next-line no-unused-vars
-      let usrURL = 'http://localhost:9191/login?name=' + response.data.name + '&password=' + response.data.name + '&role=' + response.data.role + '&action=' + 'login'
+      let usrURL = 'http://8.218.97.40:9191/login?name=' + response.data.name + '&password=' + response.data.name + '&role=' + response.data.role + '&action=' + 'login'
       axios.post(
         usrURL
       ).then((json) => {
@@ -600,9 +600,9 @@ export default {
       }
       // debugger
       let that = this
-      let url = 'http://localhost:9191?query=' + encodeURIComponent(this.statesBackupList.join(' ')) + '&refinements=' + encodeURIComponent(newFilters.join(','))
+      let url = 'http://8.218.97.40:9191?query=' + encodeURIComponent(this.statesBackupList.join(' ')) + '&refinements=' + encodeURIComponent(newFilters.join(','))
       axios.get(
-        url, { timeout: 50000 }
+        url, { timeout: 300000 }
       ).then((json) => {
         if (json.data.ref === 'error') {
           this.$Notice.warning({
@@ -651,9 +651,9 @@ export default {
       })
       this.searching = true
       this.searchPanelLoading = false
-      let url = 'http://localhost:9191?query=' + encodeURIComponent(states.join(' '))
+      let url = 'http://8.218.97.40:9191?query=' + encodeURIComponent(states.join(' '))
       axios.get(
-        url, { timeout: 50000 }
+        url, { timeout: 300000 }
       ).then((json) => {
         if (json.data.key === 'error') {
           this.$Notice.warning({
